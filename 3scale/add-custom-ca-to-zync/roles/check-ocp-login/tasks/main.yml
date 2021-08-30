@@ -1,0 +1,4 @@
+# roles/check-ocp-login/tasks/main.yml
+
+- name: Check ocp login
+  shell: oc whoami

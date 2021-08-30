@@ -1,0 +1,20 @@
+---
+
+- name: Adds Custom CA to zync
+  hosts: threescale
+  gather_facts: no
+  vars:
+#  - threescale_namespace: 3scale # set in inventory
+#  - custom_ca_file: custom-ca.pem # set in inventory
+
+  tasks:
+  - name: Check that user is logged in to OpenShift
+    ansible.builtin.include_role:
+      name: check-ocp-login
+
+  - name: Add Custom CA to Zync
+    ansible.builtin.include_role:
+      name: add-custom-ca-to-zync
+    vars:
+      namespace_name: "{{ threescale_namespace }}"
+      zync_custom_ca_file: "{{ custom_ca_file }}"

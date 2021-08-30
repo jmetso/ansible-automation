@@ -1,0 +1,8 @@
+[threescale]
+localhost ansible_connection=local
+
+[threescale:vars]
+# Openshift namespace where 3scale is installed in
+threescale_namespace=3scale
+# Path to custom ca file in pem format
+custom_ca_file=custom-ca.pem

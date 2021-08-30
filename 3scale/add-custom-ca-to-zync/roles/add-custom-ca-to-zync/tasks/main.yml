@@ -1,0 +1,38 @@
+# roles/add-custom-ca-to-zync/tasks/main.yml
+
+- name: Find Zync pod name
+  ansible.builtin.shell: 
+    cmd: oc get pods -l deploymentConfig=zync-que -n {{ namespace_name }} | awk '{ if (NR==2) { print $1 } }'
+  register: zync_pod_name_result
+
+- name: Exctract CA file from Zync pod
+  ansible.builtin.shell:
+    cmd: oc exec {{ zync_pod_name_result.stdout }} cat /etc/pki/tls/cert.pem > /tmp/zync.pem
+
+- name: Merge Custom CA to Zync CA file
+  ansible.builtin.shell:
+    cmd: cat {{ zync_custom_ca_file }} >> /tmp/zync.pem
+
+- name: Create ConfigMap with new CA bundle
+  ansible.builtin.shell:
+    cmd: oc create configmap zync-ca-bundle --from-file=zync.pem=/tmp/zync.pem -n {{ namespace_name }}
+
+- name: Add ConfigMap as a volume to Zync-que DC
+  ansible.builtin.shell:
+    cmd: oc set volume dc/zync-que --add --name=zync-ca-bundle --mount-path /etc/pki/tls/zync/zync.pem --sub-path zync.pem --source='{"configMap":{"name":"zync-ca-bundle","items":[{"key":"zync.pem","path":"zync.pem"}]}}'
+
+- name: Set SSL_CERT_FILE environment variable for Zync-que
+  ansible.builtin.shell:
+    cmd: oc set env dc/zync-que SSL_CERT_FILE=/etc/pki/tls/zync/zync.pem
+
+- name: Add ConfigMap as a volume to Zync DC
+  ansible.builtin.shell:
+    cmd: oc set volume dc/zync --add --name=zync-ca-bundle --mount-path /etc/pki/tls/zync/zync.pem --sub-path zync.pem --source='{"configMap":{"name":"zync-ca-bundle","items":[{"key":"zync.pem","path":"zync.pem"}]}}'
+
+- name: Set SSL_CERT_FILE environment variable for Zync
+  ansible.builtin.shell:
+    cmd: oc set env dc/zync SSL_CERT_FILE=/etc/pki/tls/zync/zync.pem
+
+- name: Clean zync ca file
+  ansible.builtin.shell:
+    cmd: rm /tmp/zync.pem
