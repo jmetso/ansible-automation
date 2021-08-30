@@ -6,7 +6,7 @@ Based on [instructions in the 3scale documentation](https://access.redhat.com/do
 
 ## Running the playbook
 
-    ansible-playbook add-custom-ca-to-zync.yaml -i inventory/example.inventory
+`ansible-playbook add-custom-ca-to-zync.yaml -i inventory/example.inventory`
 
 ## Configuration
 
